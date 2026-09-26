@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Dataset, pesos y salidas pesadas
+data/
+outputs/
+runs/
+weights/
+*.pt
+
+# Tests y herramientas
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/

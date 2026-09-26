@@ -1,0 +1,18 @@
+# Cámara de entrada y salida. La línea está en coordenadas del frame original.
+# Los valores por defecto coinciden con el video de la clase de seguimiento.
+model: yolo11s.pt
+conf: 0.4
+iou: 0.6
+tracker: bytetrack.yaml
+target_classes:
+  - car
+  - truck
+  - bus
+  - motorcycle
+line:
+  - [520, 360]
+  - [1580, 360]
+dist_thresh: 18
+max_trace_len: 40
+# positive_to_negative: pasar del semiplano positivo al negativo cuenta como ingreso.
+entry_direction: positive_to_negative

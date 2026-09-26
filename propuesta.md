@@ -12,6 +12,7 @@ De esta manera, el sistema combinará dos fuentes de información:
 - La cantidad de vehículos que ingresan o egresan detectados mediante un modelo preentrenado, tracking y line crossing.
 
 ## Dataset
+https://universe.roboflow.com/faress-workspace/pklot-6mfd3
 
 Para la detección de los espacios se utilizará un modelo entrenado sobre el dataset **PKLot**, que contiene imágenes de estacionamientos con plazas identificadas como libres (*empty*) u ocupadas (*occupied*).
 

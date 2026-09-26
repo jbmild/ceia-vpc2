@@ -16,7 +16,24 @@
         "map50": 0.9943,
         "map50_95": 0.9169
       },
-      "epochs_ran": 20
+      "epochs_ran": 20,
+      "test_per_class": {
+        "empty": {
+          "instances": 96133,
+          "precision": 0.995,
+          "recall": 0.917,
+          "map50": 0.957,
+          "map50_95": 0.909
+        },
+        "occupied": {
+          "instances": 28335,
+          "precision": 0.78,
+          "recall": 1.0,
+          "map50": 0.87,
+          "map50_95": 0.805
+        }
+      },
+      "test_instances": 124468
     },
     {
       "model": "yolo11s",

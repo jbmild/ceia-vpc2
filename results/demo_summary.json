@@ -1,0 +1,10 @@
+{
+  "ingresos": 3,
+  "egresos": 1,
+  "delta_cupo": -2,
+  "plazas_libres": 25,
+  "plazas_ocupadas": 15,
+  "acceso_ms_por_frame": 19.17,
+  "plazas_ms_por_frame": 24.29,
+  "video": "outputs/demo.mp4"
+}

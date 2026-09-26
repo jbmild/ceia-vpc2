@@ -1,0 +1,62 @@
+{
+  "rule": "Mayor mAP50 entre los modelos cuya latencia no supera 1.5 veces la del más rápido.",
+  "models": [
+    {
+      "model": "yolo11n",
+      "weights": "runs/spaces/yolo11n/weights/best.pt",
+      "map50": 0.9136,
+      "map50_95": 0.8566,
+      "precision": 0.8874,
+      "recall": 0.9582,
+      "latency_ms": 9.83,
+      "selected": true,
+      "val": {
+        "precision": 0.9943,
+        "recall": 0.993,
+        "map50": 0.9943,
+        "map50_95": 0.9169
+      },
+      "epochs_ran": 20
+    },
+    {
+      "model": "yolo11s",
+      "weights": "runs/spaces/yolo11s/weights/best.pt",
+      "map50": 0.8908,
+      "map50_95": 0.8558,
+      "precision": 0.8885,
+      "recall": 0.9582,
+      "latency_ms": 9.52,
+      "selected": false,
+      "val": {
+        "precision": 0.9798,
+        "recall": 0.9813,
+        "map50": 0.9931,
+        "map50_95": 0.9366
+      },
+      "epochs_ran": 20
+    }
+  ],
+  "selected_model": "yolo11n",
+  "selected_weights": "runs/spaces/yolo11n/weights/best.pt",
+  "dataset": {
+    "name": "PKLot",
+    "source": "Espejo del archivo oficial UFPR (PKLot.tar.gz), convertido a cajas YOLO.",
+    "split": "Por día de captura, semilla 22: 70% train, 15% valid, 15% test.",
+    "images": {
+      "train": 8864,
+      "valid": 1814,
+      "test": 1738
+    },
+    "classes": [
+      "empty",
+      "occupied"
+    ]
+  },
+  "train": {
+    "epochs": 20,
+    "imgsz": 640,
+    "batch": 8,
+    "patience": 5,
+    "device": "RTX 4060 Ti"
+  }
+}

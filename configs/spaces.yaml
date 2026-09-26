@@ -1,0 +1,12 @@
+model: runs/spaces/yolo11n/weights/best.pt
+conf: 0.25
+iou: 0.5
+empty_names:
+- empty
+- space-empty
+- libre
+- vacant
+occupied_names:
+- occupied
+- space-occupied
+- ocupado

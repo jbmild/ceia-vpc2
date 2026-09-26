@@ -1,5 +1,6 @@
 ultralytics>=8.3.0
 opencv-python>=4.8.0
+lap>=0.5.12
 roboflow>=1.1.0
 pyyaml>=6.0
 numpy>=1.24

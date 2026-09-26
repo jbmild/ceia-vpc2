@@ -15,3 +15,4 @@ weights/
 .pytest_cache/
 .mypy_cache/
 .ipynb_checkpoints/
+*.egg-info/

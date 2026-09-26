@@ -1,0 +1,59 @@
+---
+title: "Inferencia · Cámara de acceso → ingresos y egresos por la barrera"
+---
+flowchart TB
+    %% Inferencia de la cámara de acceso: ingresos y egresos.
+    %% No se entrena: YOLO11s preentrenado en COCO + ByteTrack + línea virtual.
+    %% Código: src/estacionamiento/access.py y geometry.py
+    classDef data fill:#e8f1fb,stroke:#3b78c2,color:#10253f
+    classDef proc fill:#fdf3e1,stroke:#c98a1b,color:#3d2a06
+    classDef model fill:#e6f5ea,stroke:#2f8f4e,color:#0f2f19
+    classDef out fill:#f1e9fb,stroke:#7b4bb8,color:#26123f
+    classDef decision fill:#fde8e8,stroke:#c0392b,color:#3f0f0b
+    classDef stage fill:#eef3fb,stroke:#3b78c2,stroke-width:2px,color:#10253f
+    classDef entry fill:#fbe3e3,stroke:#c0392b,color:#3f0f0b
+    classDef exit fill:#e3f6e8,stroke:#2f8f4e,color:#0f2f19
+
+    subgraph S1["1. Entrada"]
+        A1[("Cámara de acceso<br/>video")]:::data
+    end
+
+    subgraph S2["2. Preprocesamiento"]
+        B1["Ubicación de la línea virtual<br/>sobre la barrera"]:::proc
+        B2["Lectura frame a frame<br/>OpenCV"]:::proc
+        B3["Letterbox 640 px<br/>BGR → RGB · escala 0-1"]:::proc
+    end
+
+    subgraph S3["3. Modelo principal: detección de objetos"]
+        C1["Detector de vehículos<br/>YOLO11s preentrenado COCO"]:::model
+        C2["Filtro por confianza 0.4<br/>+ NMS IoU 0.6"]:::proc
+    end
+
+    subgraph S4["4. Modelo adicional: seguimiento"]
+        D1["ByteTrack<br/>id por vehículo"]:::model
+        D2["Filtro de clases<br/>car · truck · bus · motorcycle"]:::proc
+        D3["Centro de la caja"]:::proc
+    end
+
+    subgraph S5["5. Posprocesamiento: cruce de línea"]
+        E1{"¿Cruza la línea<br/>y el id no fue contado?"}:::decision
+        E2{"Sentido del cruce"}:::decision
+        E4["Ingreso<br/>cupo −1"]:::entry
+        E5["Egreso<br/>cupo +1"]:::exit
+        E3["Anotación<br/>línea · trayectoria · id · contadores"]:::proc
+    end
+
+    subgraph S6["6. Resultados (consola / terminal)"]
+        F1[/"Video anotado<br/>outputs/acceso.mp4"/]:::out
+        F2[/"Resumen JSON en consola<br/>ingresos · egresos · delta_cupo"/]:::out
+    end
+
+    A1 --> B1 --> B2 --> B3 --> C1 --> C2 --> D1 --> D2 --> D3 --> E1
+    E1 -- "sí" --> E2
+    E2 -- "hacia adentro" --> E4 --> E3
+    E2 -- "hacia afuera" --> E5 --> E3
+    E1 -- "no" --> E3
+    E3 --> F1
+    E3 --> F2
+
+    class S1,S2,S3,S4,S5,S6 stage

@@ -1,0 +1,43 @@
+---
+title: "Inferencia · Cámara interna → plazas libres y ocupadas"
+---
+flowchart TB
+    %% Inferencia de la cámara interna: plazas libres y ocupadas.
+    %% Código: src/estacionamiento/spaces.py
+    classDef data fill:#e8f1fb,stroke:#3b78c2,color:#10253f
+    classDef proc fill:#fdf3e1,stroke:#c98a1b,color:#3d2a06
+    classDef model fill:#e6f5ea,stroke:#2f8f4e,color:#0f2f19
+    classDef out fill:#f1e9fb,stroke:#7b4bb8,color:#26123f
+    classDef stage fill:#eef7f0,stroke:#2f8f4e,stroke-width:2px,color:#0f2f19
+
+    subgraph S1["1. Entrada"]
+        A1[("Cámara interna<br/>imagen · video · carpeta")]:::data
+    end
+
+    subgraph S2["2. Preprocesamiento"]
+        B1["Lectura de frames<br/>OpenCV"]:::proc
+        B2["Muestreo<br/>frame_stride · max_images"]:::proc
+        B3["Letterbox 640 px<br/>BGR → RGB · escala 0-1"]:::proc
+    end
+
+    subgraph S3["3. Modelo principal: detección de objetos"]
+        C1["Detector de plazas entrenado<br/>YOLO11n · best.pt"]:::model
+        C2["Filtro por confianza 0.25<br/>+ NMS IoU 0.5"]:::proc
+    end
+
+    subgraph S4["4. Posprocesamiento"]
+        D1["Clase por plaza<br/>libre / ocupada"]:::proc
+        D2["Conteo por frame<br/>libres · ocupadas"]:::proc
+        D3["Anotación<br/>cajas verde / rojo + totales"]:::proc
+    end
+
+    subgraph S5["5. Resultados (consola / terminal)"]
+        E1[/"Video anotado<br/>outputs/plazas.mp4"/]:::out
+        E2[/"Resumen JSON en consola<br/>libres · ocupadas"/]:::out
+    end
+
+    A1 --> B1 --> B2 --> B3 --> C1 --> C2 --> D1 --> D2 --> D3
+    D3 --> E1
+    D3 --> E2
+
+    class S1,S2,S3,S4,S5 stage

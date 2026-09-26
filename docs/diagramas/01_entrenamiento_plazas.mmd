@@ -1,0 +1,52 @@
+%% Entrenamiento del detector de plazas (única etapa que se entrena).
+%% Código: scripts/download_dataset.py (--source roboflow) y scripts/train_spaces.py
+flowchart TD
+    classDef data fill:#e8f1fb,stroke:#3b78c2,color:#10253f
+    classDef proc fill:#fdf3e1,stroke:#c98a1b,color:#3d2a06
+    classDef model fill:#e6f5ea,stroke:#2f8f4e,color:#0f2f19
+    classDef out fill:#f1e9fb,stroke:#7b4bb8,color:#26123f
+    classDef decision fill:#fde8e8,stroke:#c0392b,color:#3f0f0b
+
+    subgraph S1["1. Adquisición del dataset"]
+        A1[("PKLot en Roboflow<br/>faress-workspace/pklot-6mfd3")]:::data
+        A2["Descarga por API<br/>ROBOFLOW_API_KEY · formato YOLOv11"]:::proc
+        A3[("train · valid · test<br/>imágenes + labels .txt")]:::data
+    end
+
+    subgraph S2["2. Preparación del dataset"]
+        B1["Lectura de data.yaml del export"]:::proc
+        B2["Nombres de clase del export<br/>libre / ocupada"]:::proc
+        B3["Rutas absolutas de cada split"]:::proc
+        B4[/"data/pklot.yaml"/]:::out
+    end
+
+    subgraph S3["3. Fine-tuning (por cada modelo candidato)"]
+        C0["Pesos preentrenados COCO<br/>yolo11n.pt · yolo11s.pt"]:::model
+        C1["Letterbox 640 px<br/>+ aumentación Ultralytics"]:::proc
+        C2["Entrenamiento YOLO11<br/>20 épocas · batch 8 · patience 5 · GPU"]:::model
+        C3[/"best.pt<br/>(mejor época en valid)"/]:::out
+    end
+
+    subgraph S4["4. Evaluación y selección"]
+        D1["Evaluación en split test<br/>mAP50 · mAP50-95 · P · R"]:::proc
+        D2["Latencia<br/>3 warm-up + 40 imágenes"]:::proc
+        D3{"Mayor mAP50 con latencia<br/>≤ 1.5 × la más rápida"}:::decision
+    end
+
+    subgraph S5["5. Artefactos del entrenamiento"]
+        E1[/"results/spaces_metrics.json"/]:::out
+        E2[/"configs/spaces.yaml<br/>modelo ganador · conf 0.25 · iou 0.5"/]:::out
+        E3(["Detector de plazas seleccionado"]):::model
+    end
+
+    A1 --> A2 --> A3 --> B1 --> B2 --> B3 --> B4
+    B4 --> C1
+    C0 --> C2
+    C1 --> C2 --> C3
+    C3 --> D1
+    C3 --> D2
+    D1 --> D3
+    D2 --> D3
+    D3 --> E1
+    D3 --> E2
+    E2 --> E3

@@ -11,6 +11,11 @@ import cv2
 import yaml
 from ultralytics import YOLO
 
+from estacionamiento.display import close_windows, show_frame
+
+# Segundos que se ve cada foto cuando la fuente es una carpeta, en la ventana y en el video.
+IMAGE_SECONDS = 3.0
+
 EMPTY_COLOR = (0, 180, 0)
 OCCUPIED_COLOR = (0, 0, 255)
 WHITE = (255, 255, 255)
@@ -22,6 +27,7 @@ class SpaceSummary:
     empty: int
     occupied: int
     output: str
+    display_s: float = 0.0
 
 
 def load_spaces_config(path: str | Path) -> dict:
@@ -48,8 +54,13 @@ def process_spaces(
     config: dict,
     frame_stride: int = 1,
     max_images: int = 0,
+    show: bool = False,
 ) -> SpaceSummary:
-    """Anota una imagen, un video o una carpeta. El conteo del resumen es el del último frame."""
+    """Anota una imagen, un video o una carpeta. El conteo del resumen es el del último frame.
+
+    Con ``show`` se ve cada frame anotado. Las fotos de una carpeta quedan ``IMAGE_SECONDS``
+    en pantalla, el mismo ritmo del video de salida.
+    """
     source = Path(source)
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -62,6 +73,7 @@ def process_spaces(
     writer = None
     last_counts = {"empty": 0, "occupied": 0}
     saved = 0
+    display_s = 0.0
     for frame in frames:
         annotated, last_counts = annotate_frame(model, names, frame, config)
         if writer is None:
@@ -69,18 +81,26 @@ def process_spaces(
             writer = cv2.VideoWriter(
                 str(output_path),
                 cv2.VideoWriter_fourcc(*"mp4v"),
-                2.0 if source.is_dir() else 25.0,
+                1.0 / IMAGE_SECONDS if source.is_dir() else 25.0,
                 (width, height),
             )
         writer.write(annotated)
         saved += 1
+        if show:
+            keep_going, shown = show_frame("Plazas", annotated, int(IMAGE_SECONDS * 1000) if source.is_dir() else 1)
+            display_s += shown
+            if not keep_going:
+                break
     if writer is not None:
         writer.release()
+    if show:
+        close_windows()
     return SpaceSummary(
         frames=saved,
         empty=last_counts["empty"],
         occupied=last_counts["occupied"],
         output=str(output_path),
+        display_s=round(display_s, 3),
     )
 
 
@@ -151,6 +171,7 @@ def main() -> None:
     parser.add_argument("--config", default="configs/spaces.yaml")
     parser.add_argument("--max-images", type=int, default=0, help="0 procesa todas. Útil para carpetas grandes.")
     parser.add_argument("--summary", default="")
+    parser.add_argument("--show", action="store_true", help="Muestra cada frame anotado mientras se procesa. q corta.")
     args = parser.parse_args()
 
     summary = process_spaces(
@@ -158,6 +179,7 @@ def main() -> None:
         args.output,
         load_spaces_config(args.config),
         max_images=args.max_images,
+        show=args.show,
     )
     print(json.dumps(asdict(summary), indent=2))
     if args.summary:

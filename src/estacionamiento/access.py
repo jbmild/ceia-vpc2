@@ -15,6 +15,7 @@ import cv2
 import yaml
 from ultralytics import YOLO
 
+from estacionamiento.display import close_windows, show_frame
 from estacionamiento.geometry import EGRESO, INGRESO, LineCrossingCounter, box_center
 
 CYAN = (255, 255, 0)
@@ -31,6 +32,7 @@ class AccessSummary:
     delta_cupo: int
     frames: int
     output: str
+    display_s: float = 0.0
 
 
 def _line_for_frame(line, width: int, height: int):
@@ -61,8 +63,9 @@ def process_access_video(
     video_path: str | Path,
     output_path: str | Path,
     config: dict,
+    show: bool = False,
 ) -> AccessSummary:
-    """Procesa un video de acceso y escribe la versión anotada."""
+    """Procesa un video de acceso y escribe la versión anotada. Con ``show`` lo muestra en una ventana."""
     video_path = Path(video_path)
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -96,6 +99,7 @@ def process_access_video(
     kinds: dict[int, str] = {}
     target_classes = set(config["target_classes"])
     frames = 0
+    display_s = 0.0
 
     while True:
         ok, frame = capture.read()
@@ -133,9 +137,16 @@ def process_access_video(
 
         _draw_hud(frame, counter)
         writer.write(frame)
+        if show:
+            keep_going, shown = show_frame("Acceso", frame)
+            display_s += shown
+            if not keep_going:
+                break
 
     capture.release()
     writer.release()
+    if show:
+        close_windows()
     delta = counter.egresos - counter.ingresos
     return AccessSummary(
         ingresos=counter.ingresos,
@@ -143,6 +154,7 @@ def process_access_video(
         delta_cupo=delta,
         frames=frames,
         output=str(output_path),
+        display_s=round(display_s, 3),
     )
 
 
@@ -182,9 +194,10 @@ def main() -> None:
     parser.add_argument("--output", default="outputs/acceso.mp4", help="Video anotado de salida.")
     parser.add_argument("--config", default="configs/access.yaml")
     parser.add_argument("--summary", default="", help="JSON opcional con los conteos.")
+    parser.add_argument("--show", action="store_true", help="Muestra el video anotado mientras se procesa.")
     args = parser.parse_args()
 
-    summary = process_access_video(args.video, args.output, load_access_config(args.config))
+    summary = process_access_video(args.video, args.output, load_access_config(args.config), show=args.show)
     print(json.dumps(asdict(summary), indent=2))
     if args.summary:
         Path(args.summary).write_text(json.dumps(asdict(summary), indent=2), encoding="utf-8")

@@ -23,6 +23,7 @@ def run_demo(
     access_config: str | Path = "configs/access.yaml",
     spaces_config: str | Path = "configs/spaces.yaml",
     max_images: int = 30,
+    show: bool = False,
 ) -> dict:
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -30,16 +31,21 @@ def run_demo(
     spaces_video_out = output_path.with_name("plazas.mp4")
 
     started = time.perf_counter()
-    access_summary = process_access_video(access_video, access_video_out, load_access_config(access_config))
-    access_ms = (time.perf_counter() - started) / max(access_summary.frames, 1) * 1000
+    access_summary = process_access_video(
+        access_video, access_video_out, load_access_config(access_config), show=show
+    )
+    access_s = time.perf_counter() - started - access_summary.display_s
+    access_ms = access_s / max(access_summary.frames, 1) * 1000
     started = time.perf_counter()
     spaces_summary = process_spaces(
         spaces_source,
         spaces_video_out,
         load_spaces_config(spaces_config),
         max_images=max_images,
+        show=show,
     )
-    spaces_ms = (time.perf_counter() - started) / max(spaces_summary.frames, 1) * 1000
+    spaces_s = time.perf_counter() - started - spaces_summary.display_s
+    spaces_ms = spaces_s / max(spaces_summary.frames, 1) * 1000
     write_figures(access_video_out, spaces_video_out)
     concatenate_videos(
         [
@@ -123,6 +129,7 @@ def main() -> None:
     parser.add_argument("--access-config", default="configs/access.yaml")
     parser.add_argument("--spaces-config", default="configs/spaces.yaml")
     parser.add_argument("--max-images", type=int, default=30)
+    parser.add_argument("--show", action="store_true", help="Muestra cada cámara mientras se procesa.")
     args = parser.parse_args()
     summary = run_demo(
         args.access_video,
@@ -131,6 +138,7 @@ def main() -> None:
         args.access_config,
         args.spaces_config,
         args.max_images,
+        args.show,
     )
     print(json.dumps(summary, indent=2))
 

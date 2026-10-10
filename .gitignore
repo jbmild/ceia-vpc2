@@ -6,7 +6,6 @@ venv/
 
 # Dataset, pesos y salidas pesadas
 data/
-outputs/
 runs/
 weights/
 *.pt
